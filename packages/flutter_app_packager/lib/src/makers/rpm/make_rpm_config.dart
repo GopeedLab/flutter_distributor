@@ -100,13 +100,22 @@ class MakeRPMConfig extends MakeConfig {
   String? attr;
   String? changelog;
 
+  // RPM rejects '-' in Version; '~' sorts a pre-release before its final release.
+  String get rpmVersion {
+    final release =
+        '${appVersion.major}.${appVersion.minor}.${appVersion.patch}';
+    if (appVersion.preRelease.isEmpty) return release;
+    final preRelease = appVersion.preRelease.join('.').replaceAll('-', '_');
+    return '$release~$preRelease';
+  }
+
   @override
   Map<String, dynamic> toJson() {
     return {
       'SPEC': {
         'preamble': {
           'Name': appName,
-          'Version': appVersion.toString(),
+          'Version': rpmVersion,
           'Release':
               "${appVersion.build.isNotEmpty ? appVersion.build.first : "1"}%{?dist}",
           'Summary': summary ?? pubspec.description,
